@@ -1,5 +1,5 @@
 from math import sqrt
-
+from copy import deepcopy
 
 class SudokuTable:
     def __init__(self, table):
@@ -49,7 +49,7 @@ class SudokuTable:
                     self.domain[(i, j)] = list(filter(lambda x: x not in self.get_constrains(i, j), initial_domain))
 
     def update_domain(self,i,j,value):
-        domain=self.domain
+        domain=deepcopy(self.domain)
         for x in range(0,self.table_len):
             if x!=j and domain.get((i,x)) and (value in domain.get((i,x))):
                 domain[(i,x)].remove(value)
@@ -63,7 +63,7 @@ class SudokuTable:
             for n in range(y * a, (y + 1) * a):
                 if (m != i or n!=j) and domain.get((m,n)) and (value in domain.get((m,n))):
                     domain[(m,n)].remove(value)
-
+        return domain
 
 
     def set_variable(self, i, j, value):

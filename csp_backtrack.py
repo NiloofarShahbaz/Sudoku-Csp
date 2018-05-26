@@ -2,6 +2,8 @@ from sudoku_table import SudokuTable
 from time import time
 from copy import deepcopy
 from math import sqrt
+from queue import PriorityQueue
+
 
 def backtrack(table,SUV,ODV):
     sudoku=SudokuTable(table)
@@ -16,13 +18,13 @@ def recursive_backtrack(assignment,sudoku,SUV,ODV):
     #print('i',i,'j',j)
     #print(sudoku)
     last_domain = deepcopy(sudoku.domain)
-    for value in sudoku.order_domain_values(choice=ODV,i=i,j=j):
+    for value in order_domain_values(sudoku,choice=ODV,i=i,j=j):
         #print(value)
         if sudoku.is_consistent(i,j,value):
             assignment[(i,j)]=value
             sudoku.set_variable(i,j,value)
             sudoku.domain=deepcopy(last_domain)
-            sudoku.update_domain(i,j,value)
+            sudoku.domain=sudoku.update_domain(i,j,value)
             result=recursive_backtrack(assignment,sudoku,SUV,ODV)
             if result:
                 return result
@@ -46,11 +48,29 @@ def select_unassigned_variable(sudoku, choice):
         pos=minimum_remaining_value(sudoku)
         return degree_heuristic(sudoku,pos)
 
-def order_domain_values(self, choice, i, j):
+
+def order_domain_values(sudoku, choice, i, j):
     if choice is 0:  # in order
-        return sorted(self.domain[(i, j)])
+        return sorted(sudoku.domain[(i, j)])
     if choice is 1:
-        pass
+        return least_constraint_value(sudoku,i,j)
+
+
+def least_constraint_value(sudoku,i,j):
+    values=PriorityQueue()
+    for value in sudoku.domain[(i,j)]:
+        new_domain=sudoku.update_domain(i,j,value)
+        constraint=0
+        for key in new_domain.keys():
+            constraint += len(new_domain[key])
+        values.put((constraint,value))
+    ordered_domain=[]
+    while not values.empty():
+        a=values.get()
+        ordered_domain.append(a[1])
+
+    ordered_domain.reverse()
+    return ordered_domain
 
 
 def minimum_remaining_value(sudoku):
@@ -90,10 +110,10 @@ def degree_heuristic(sudoku,pos):
                 x, y = i, j
     return x, y
 
-# table=[0, 4, 0, 1,
-#        0, 0, 0, 0,
-#        2, 0, 0, 0,
-#        0, 1, 0, 0]
+table=[0, 4, 0, 1,
+       0, 0, 0, 0,
+       2, 0, 0, 0,
+       0, 1, 0, 0]
 
 # backtrack(table,0,0)
 
@@ -111,7 +131,7 @@ backtrack(table,1,0)
 t1=time()-t
 print(t1)
 t=time()
-backtrack(table,2,0)
+backtrack(table,2,1)
 t1=time()-t
 print(t1)
 
